@@ -132,7 +132,7 @@ int32_t main(void)
 
 
 
-	uint32_t events_limit = 2;
+	uint32_t events_limit = EVENT_LIMITS;
 
 
 

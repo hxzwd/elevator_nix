@@ -155,7 +155,7 @@ void prepare_event(Event ev)
 {
 
 
-//	std::cout << "in prepare event" << std::endl;
+	std::cout << "in prepare event" << std::endl;
 	
 	
 	if (ev.type == 0)
@@ -172,7 +172,7 @@ void prepare_event(Event ev)
 		q_floor->push_back(in);
 		g_lock.unlock();
 		
-//		std::cout << "event prepared" << std::endl;
+		std::cout << "event prepared" << std::endl;
 
 	}
 }
@@ -258,7 +258,7 @@ int32_t main(void)
 	thr_lift.detach();
 #endif
 
-	uint32_t server_main_loop_counter = 2;
+	uint32_t server_main_loop_counter = EVENTS_LIMIT;
 	while (server_main_loop_counter--)
 	{
 		Event ev;
@@ -294,26 +294,32 @@ int32_t main(void)
 	std::cout << "main loop is aborted" << std::endl;
 
 	uint32_t message_count_in_end = 1;
-	while (1)
-	{
-		g_lock.lock();
-		if(!thread_done)
-			continue;
-		else
-		{
-			g_lock.unlock();
-			break;
-		}
-		if (message_count_in_end)
-		{
-			std::cout << "potok eshe ne zakonchil raboty" << std::endl;
-			message_count_in_end--;
-		}
-
-	}
+	int32_t super_delay = 10;
+// 	while (1)
+// 	{
+// 		if(g_lock.try_lock())
+// 		{
+// 			if(thread_done)
+// 			{
+// 				g_lock.unlock();
+// 				break;
+// 			}
+// 		}
+// 		else
+// 		{
+// 			std::cout << "cannot lock in parent thread wait for 1++ seconds" << std::endl;
+// 			std::this_thread::sleep_for(std::chrono::seconds(super_delay++));
+// 		}
+// 		if (message_count_in_end)
+// 		{
+// 			std::cout << "potok eshe ne zakonchil raboty" << std::endl;
+// 			message_count_in_end--;
+// 		}
+// 
+// 	}
 
 	std::cout << "lift thread is end" << std::endl;
-
+	std::this_thread::sleep_for(std::chrono::seconds(WORK_TIME));
 	close_socket(server);
 	close_socket(client);
 	clear_network();
@@ -330,19 +336,27 @@ static void * lift_func(/*elevator &lift*/ void *null)
 	g_lock.lock();
 	std::cout << "lift thread is detached: id# " << std::this_thread::get_id() << std::endl;
 	g_lock.unlock();
-	uint32_t loop_counter = 30;
+	uint32_t loop_counter = THREAD2_LOOP_COUNTER;
 	uint32_t flr, start_point, end_point;
 	std::chrono::time_point<std::chrono::system_clock> start_time;
 	while (loop_counter--)
 	{
 		uint64_t seconds_counter;
 		start_time = std::chrono::system_clock::now();
+		std::cout << "elevator loop:> " << loop_counter << std::endl;
 
-
-		g_lock.lock();
-		flr = build_way(lift);
-		g_lock.unlock();
-
+		if(g_lock.try_lock())
+		{
+			flr = build_way(lift);
+			g_lock.unlock();
+		}
+		else
+		{
+			std::cout << "cannot lock wait 2 seconds\n";
+			std::this_thread::sleep_for(std::chrono::seconds(2));
+			loop_counter++;
+			continue;
+		}
 
 		if (flr != 0)
 		{
@@ -352,6 +366,9 @@ static void * lift_func(/*elevator &lift*/ void *null)
 				end_point = flr;
 				for (; start_point <= end_point; start_point++)
 				{
+#ifdef FLOOR_TO_FLOOR_DELAY_ENABLE
+std::this_thread::sleep_for(std::chrono::seconds(FLOOR_TO_FLOOR_TIME));					
+#endif
 					std::cout << "poehali s " << start_point << " do " << end_point << std::endl;
 					g_lock.lock();
 					interpretate_event(start_point, lift);
@@ -364,6 +381,9 @@ static void * lift_func(/*elevator &lift*/ void *null)
 			else
 			if (lift.state.floor > flr)
 			{
+#ifdef FLOOR_TO_FLOOR_DELAY_ENABLE
+std::this_thread::sleep_for(std::chrono::seconds(FLOOR_TO_FLOOR_TIME));					
+#endif
 				start_point = lift.state.floor;
 				end_point = flr;
 				for (; start_point >= end_point; start_point--)
@@ -387,7 +407,8 @@ static void * lift_func(/*elevator &lift*/ void *null)
 		}
 		else
 		{
-//			continue;
+			std::this_thread::sleep_for(std::chrono::seconds(3));
+			continue;
 		}
 
 		while (1)
@@ -407,6 +428,7 @@ static void * lift_func(/*elevator &lift*/ void *null)
 
 uint32_t build_way(elevator &lift)
 {
+	std::cout << "\tBUILDWAY:> ";
 	for (auto it = q_floor->begin(); it != q_floor->end(); ++it)
 	{
 		if ((*it).desc != "")
@@ -417,8 +439,10 @@ uint32_t build_way(elevator &lift)
 	}
 	if (!q_floor->empty())
 	{
+		std::cout << q_floor->at(0).floor << std::endl;
 		return q_floor->at(0).floor;
 	}
+	std::cout << 0 << std::endl;
 	return 0;
 
 	/*

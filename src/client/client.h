@@ -4,9 +4,11 @@
 #include <ctime>
 #include <string>
 #include <chrono>
-#define STANDARD_SERVER_PORT 1338
+
+#define STANDARD_SERVER_PORT 1331
 #define STANDARD_SERVER_ADDR "127.0.0.1"
-#define SECONDS_PER_EVENT 30
+#define SECONDS_PER_EVENT 5
+#define EVENT_LIMITS 5
 
 typedef struct
 {

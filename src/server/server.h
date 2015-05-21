@@ -15,7 +15,7 @@
 #include <pthread.h>
 #endif
 
-#define STANDARD_SERVER_PORT 1338
+#define STANDARD_SERVER_PORT 1331
 #define STANDARD_SERVER_ADDR "127.0.0.1"
 #define MAX_BUFFER_SIZE 65536
 
@@ -59,11 +59,16 @@ public:
 	}
 };
 
+#define THREAD2_LOOP_COUNTER 30
 #define ELEVATOR_VELOCITY 0.5
 #define MAX_LOADS_W 500
 #define MAX_LOADS_P 5
 #define MAX_FLOORS 7
-#define MAIN_TIME_CONSTANT 60
+#define MAIN_TIME_CONSTANT 5
+#define WORK_TIME 900
+#define EVENTS_LIMIT 5
+#define FLOOR_TO_FLOOR_TIME 1
+#define FLOOR_TO_FLOOR_DELAY_ENABLE
 
 typedef struct
 {

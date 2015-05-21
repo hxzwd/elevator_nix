@@ -3,7 +3,7 @@ project(elevator)
 
 if(UNIX)
     set(CMAKE_CXX_COMPILER "g++-4.9")
-    add_definitions("-Wall -std=c++11 -lpthread")
+    add_definitions("-g -Wall -std=c++11 -lpthread")
 else()
 
 endif()
